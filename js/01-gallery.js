@@ -51,12 +51,16 @@ import { galleryItems } from "./gallery-items.js";
 //и предоставленному шаблону элемента галереи.
 const gallery = document.querySelector(".gallery");
 console.log(gallery);
+
+gallery.addEventListener("click", onGalleryClick);
+
 const galleryMarkup = createGalleryItems();
 gallery.insertAdjacentHTML("beforeend", galleryMarkup);
+
 function createGalleryItems() {
   const markup = galleryItems
     .map(({ preview, original, description }) => {
-      return `<div class="gallery">
+      return `<div class="gallery__item">
   <a href="${original}" class="gallery__link">
     <img
      class="gallery__image"
@@ -70,24 +74,32 @@ function createGalleryItems() {
   //console.log(markup);
   return markup;
 }
-gallery.addEventListener("click", (e) => {
-  console.log(e);
+
+function onGalleryClick(e) {
   e.preventDefault();
+
   if (e.target.nodeName !== "IMG") {
     return;
   }
+  const selectedImage = e.target.dataset.source;
+  const instance = basicLightbox.create(
+    `<img src="${selectedImage}" width="800" height="600">`,
+    {
+      onShow: () => {
+        document.addEventListener("keydown", onEsc.bind(instance));
+      },
 
-  const selectedImage = e.target.getAttribute("data-source");
-
-  const instance = basicLightbox.create(`
-    <img src="${selectedImage}" width="800" height="600">
-`);
+      onClose: () => {
+        document.removeEventListener("keydown", onEsc);
+      },
+    }
+  );
 
   instance.show();
+}
 
-  gallery.addEventListener("keydown", (e) => {
-    if (e.key === "Escape") {
-      instance.close();
-    }
-  });
-});
+function onEsc(e) {
+  if (e.code === "Escape") {
+    this.close();
+  }
+}
